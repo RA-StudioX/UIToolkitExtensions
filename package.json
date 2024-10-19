@@ -1,6 +1,6 @@
 {
     "name": "net.ra-studio.uitoolkit.extensions",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "displayName": "UI Toolkit Extensions",
     "description": "Extensions for Unity UI Toolkit, including enhanced Visual Elements and transition utilities.",
     "unity": "2021.3",

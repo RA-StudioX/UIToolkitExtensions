@@ -75,11 +75,12 @@ public class TransitionExample : MonoBehaviour
         element.SetupTransition("opacity", 500, EasingMode.EaseInOut, 100, () => Debug.Log("Transition complete"));
 
         // Setup multiple transitions
-        var transitions = new Dictionary<string, (int durationMs, EasingMode? easingMode, int? delayMs)>
+        var transitions = new Dictionary<string, object>
         {
-            { "opacity", (500, EasingMode.EaseInOut, 100) },
-            { "scale", (750, EasingMode.EaseOutBounce, 0) }
-            { "color", (100) }
+            { "opacity", (500, EasingMode.EaseInOut, 100) }, // duration, Easingode, delay
+            { "left" , (750, EasingMode.EaseOutBounce)}, // duration, EasingMode
+            { "top", (750, 200)}, // duration, delay (ms)
+            { "color", 100 }, //  with duration (ms)
         };
         element.SetupTransitions(transitions, () => Debug.Log("All transitions complete"));
 

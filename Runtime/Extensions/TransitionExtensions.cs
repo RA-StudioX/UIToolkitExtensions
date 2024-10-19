@@ -1,7 +1,7 @@
 using UnityEngine.UIElements;
 using System.Collections.Generic;
-using System.Linq;
 using System;
+using System.Linq;
 
 namespace RAStudio.UIToolkit.Extensions
 {
@@ -31,80 +31,145 @@ namespace RAStudio.UIToolkit.Extensions
             element.style.transitionTimingFunction = new List<EasingFunction> { new EasingFunction(easingMode ?? DefaultEasingMode) };
             element.style.transitionDelay = new List<TimeValue> { new TimeValue(delayMs, TimeUnit.Millisecond) };
 
-            // If a callback is provided, register the TransitionEndEvent
             if (callback != null)
             {
-                element.RegisterCallback<TransitionEndEvent>(evt =>
+                EventCallback<TransitionEndEvent> handler = null;
+                handler = (evt) =>
                 {
                     if (evt.stylePropertyNames.Contains(new StylePropertyName(propertyName)))
                     {
                         callback?.Invoke();
-                        // Cleanup listener after the callback is invoked
-                        element.UnregisterCallback<TransitionEndEvent>(null);
+                        element.UnregisterCallback(handler);
                     }
-                });
+                };
+                element.RegisterCallback(handler);
             }
         }
 
+
         /// <summary>
-        /// Sets up multiple transitions for a VisualElement with individual durations, optional easing modes, and optional delays.
+        /// Sets up multiple transitions for a VisualElement with flexible configuration options.
         /// Invokes a callback when all transitions are completed.
         /// </summary>
         /// <param name="element">The VisualElement to set up the transitions on.</param>
-        /// <param name="transitions">A dictionary where the key is the property name and the value is a tuple containing:
-        /// - durationMs (required): The duration of the transition in milliseconds.
-        /// - easingMode (optional): The easing mode for the transition. If not provided, uses the default easing mode.
-        /// - delayMs (optional): The delay before the transition starts, in milliseconds. If not provided, defaults to 0.</param>
+        /// <param name="transitions">A dictionary where the key is the property name and the value can be one of the following:
+        /// - int: Represents the duration in milliseconds.
+        /// - (int durationMs, EasingMode easingMode, int delayMs): A tuple with duration, optional easing mode, and optional delay.
+        /// - (int durationMs, EasingMode easingMode): A tuple with duration and optional easing mode.
+        /// - (int durationMs, int delayMs): A tuple with duration and optional delay.</param>
         /// <param name="callback">The action to invoke when all transitions are completed. Optional.</param>
+        /// <exception cref="ArgumentException">Thrown when an invalid value type is provided for a transition.</exception>
+        /// <example>
+        /// Here are some examples of how to use this method:
+        /// <code>
+        /// var transitions = new Dictionary<string, object>
+        /// {
+        ///     { "opacity", 2000 },                                  // Just duration
+        ///     { "scale", (1500, EasingMode.EaseOutBounce, 500) },   // Duration, easing, and delay
+        ///     { "position", (1000, EasingMode.EaseInOut) },         // Duration and easing
+        ///     { "rotation", (800, 200) }                            // Duration and delay
+        /// };
+        /// 
+        /// element.SetupTransitions(transitions, () => Debug.Log("All transitions completed!"));
+        /// </code>
+        /// </example>
         public static void SetupTransitions(this VisualElement element,
-            Dictionary<string, (int durationMs, EasingMode? easingMode, int? delayMs)> transitions,
+            Dictionary<string, object> transitions,
             Action callback = null)
         {
-            int totalTransitions = transitions.Count;
-            int completedTransitions = 0;
+            var defaultDelay = 0;
 
-            // Setup the transitions
             element.style.transitionProperty = new List<StylePropertyName>(transitions.Keys.Select(k => new StylePropertyName(k)));
-            element.style.transitionDuration = new List<TimeValue>(transitions.Values.Select(v => new TimeValue(v.durationMs, TimeUnit.Millisecond)));
-            element.style.transitionTimingFunction = new List<EasingFunction>(transitions.Values.Select(v => new EasingFunction(v.easingMode ?? DefaultEasingMode)));
-            element.style.transitionDelay = new List<TimeValue>(transitions.Values.Select(v => new TimeValue(v.delayMs ?? 0, TimeUnit.Millisecond)));
 
-            // If a callback is provided, register the TransitionEndEvent
+            var durations = new List<TimeValue>();
+            var timingFunctions = new List<EasingFunction>();
+            var delays = new List<TimeValue>();
+
+            foreach (var kvp in transitions)
+            {
+                int durationMs;
+                EasingMode? easingMode = null;
+                int? delayMs = null;
+
+                if (kvp.Value is int duration)
+                {
+                    durationMs = duration;
+                }
+                else if (kvp.Value is ValueTuple<int, EasingMode, int> tuple3)
+                {
+                    (durationMs, easingMode, delayMs) = tuple3;
+                }
+                else if (kvp.Value is ValueTuple<int, EasingMode> tuple2Easing)
+                {
+                    (durationMs, easingMode) = tuple2Easing;
+                }
+                else if (kvp.Value is ValueTuple<int, int> tuple2Delay)
+                {
+                    (durationMs, delayMs) = tuple2Delay;
+                }
+                else
+                {
+                    throw new ArgumentException($"Invalid value type for key {kvp.Key}");
+                }
+
+                durations.Add(new TimeValue(durationMs, TimeUnit.Millisecond));
+                timingFunctions.Add(new EasingFunction(easingMode ?? DefaultEasingMode));
+                delays.Add(new TimeValue(delayMs ?? defaultDelay, TimeUnit.Millisecond));
+            }
+
+            element.style.transitionDuration = durations;
+            element.style.transitionTimingFunction = timingFunctions;
+            element.style.transitionDelay = delays;
+
             if (callback != null)
             {
-                // Register a callback for each transition
+                int totalTransitions = transitions.Count;
+                int completedTransitions = 0;
+
+                List<EventCallback<TransitionEndEvent>> handlers = new List<EventCallback<TransitionEndEvent>>();
+
                 foreach (var property in transitions.Keys)
                 {
-                    element.RegisterCallback<TransitionEndEvent>(evt =>
+                    EventCallback<TransitionEndEvent> handler = null;
+                    handler = (evt) =>
                     {
-                        if (evt.stylePropertyNames.Contains(new StylePropertyName(property)))
+                        if (!evt.stylePropertyNames.Contains(new StylePropertyName(property)))
                         {
-                            completedTransitions++;
-
-                            // If all transitions are completed, invoke the callback
-                            if (completedTransitions >= totalTransitions)
-                            {
-                                callback.Invoke();
-                                // Cleanup listener after the callback is invoked
-                                element.UnregisterCallback<TransitionEndEvent>(null);
-                            }
+                            return;
                         }
-                    });
+
+                        completedTransitions++;
+                        element.UnregisterCallback(handler);
+
+                        if (completedTransitions < totalTransitions)
+                        {
+                            return;
+                        }
+
+                        callback.Invoke();
+                        foreach (var h in handlers)
+                        {
+                            element.UnregisterCallback(h);
+                        }
+                    };
+
+                    handlers.Add(handler);
+                    element.RegisterCallback(handler);
                 }
             }
-        }
+    }
 
-        /// <summary>
-        /// Clears all transitions from the VisualElement.
-        /// </summary>
-        /// <param name="element">The VisualElement to clear transitions from.</param>
-        public static void ClearTransitions(this VisualElement element)
+    /// <summary>
+    /// Clears all transitions from the VisualElement.
+    /// </summary>
+    /// <param name="element">The VisualElement to clear transitions from.</param>
+    public static void ClearTransitions(this VisualElement element)
         {
             element.style.transitionProperty = StyleKeyword.Null;
             element.style.transitionDuration = StyleKeyword.Null;
             element.style.transitionTimingFunction = StyleKeyword.Null;
             element.style.transitionDelay = StyleKeyword.Null;
-            element.UnregisterCallback<TransitionEndEvent>(null);
+            element.UnregisterCallback<TransitionEndEvent>((evt) => { });
         }
     }
 }
