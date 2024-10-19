@@ -1,0 +1,22 @@
+{
+    "name": "net.ra-studio.uitoolkit.extensions",
+    "version": "1.0.0",
+    "displayName": "UI Toolkit Extensions",
+    "description": "Extensions for Unity UI Toolkit, including enhanced Visual Elements and transition utilities.",
+    "unity": "2021.3",
+    "documentationUrl": "https://github.com/RA-StudioX/UIToolkitExtensions/blob/main/Documentation~/UIToolkitExtensions.md",
+    "changelogUrl": "https://github.com/RA-StudioX/UIToolkitExtensions/blob/main/CHANGELOG.md",
+    "licensesUrl": "https://github.com/RA-StudioX/UIToolkitExtensions/blob/main/LICENSE.md",
+    "dependencies": {},
+    "keywords": [
+      "ui",
+      "toolkit",
+      "extensions",
+      "transitions"
+    ],
+    "author": {
+      "name": "RA Studio",
+      "email": "contact@ra-studio.net",
+      "url": "https://ra-studio.net"
+    }
+  }
