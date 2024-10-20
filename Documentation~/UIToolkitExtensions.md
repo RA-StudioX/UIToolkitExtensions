@@ -42,6 +42,7 @@ public static void Hide(this VisualElement element)
 ```
 
 Example:
+
 ```csharp
 myElement.Hide();
 ```
@@ -55,6 +56,7 @@ public static void Show(this VisualElement element)
 ```
 
 Example:
+
 ```csharp
 myElement.Show();
 ```
@@ -68,6 +70,7 @@ public static void ToggleVisibility(this VisualElement element)
 ```
 
 Example:
+
 ```csharp
 myElement.ToggleVisibility();
 ```
@@ -81,6 +84,7 @@ public static void AddClassWithDelay(this VisualElement element, string classNam
 ```
 
 Example:
+
 ```csharp
 myElement.AddClassWithDelay("highlight", 1000); // Adds "highlight" class after 1 second
 ```
@@ -94,6 +98,7 @@ public static void RemoveClassWithDelay(this VisualElement element, string class
 ```
 
 Example:
+
 ```csharp
 myElement.RemoveClassWithDelay("highlight", 2000); // Removes "highlight" class after 2 seconds
 ```
@@ -107,6 +112,7 @@ public static void SetStyleWithDelay(this VisualElement element, Action<IStyle> 
 ```
 
 Example:
+
 ```csharp
 myElement.SetStyleWithDelay(style => style.backgroundColor = Color.red, 1500); // Sets background color to red after 1.5 seconds
 ```
@@ -122,6 +128,7 @@ public static void SetupTransition(this VisualElement element, string propertyNa
 ```
 
 Example:
+
 ```csharp
 myElement.SetupTransition("opacity", 500, EasingMode.EaseInOut, 100, () => Debug.Log("Transition complete"));
 ```
@@ -135,11 +142,14 @@ public static void SetupTransitions(this VisualElement element, Dictionary<strin
 ```
 
 Example:
+
 ```csharp
-var transitions = new Dictionary<string, (int durationMs, EasingMode? easingMode, int? delayMs)>
+var transitions = new Dictionary<string, object>
 {
     { "opacity", (500, EasingMode.EaseInOut, 100) },
-    { "scale", (750, EasingMode.EaseOutBounce, 0) }
+    { "scale", (750, EasingMode.EaseOutBounce) },
+    { "left", (400, 200)},
+    { "top", 200 },
 };
 myElement.SetupTransitions(transitions, () => Debug.Log("All transitions complete"));
 ```
@@ -153,6 +163,7 @@ public static void ClearTransitions(this VisualElement element)
 ```
 
 Example:
+
 ```csharp
 myElement.ClearTransitions();
 ```

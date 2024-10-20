@@ -8,12 +8,13 @@
 
 ## Description
 
-UI Toolkit Extensions is a Unity package that enhances the functionality of Unity's UI Toolkit. It provides extended Visual Elements and utilities for creating smooth transitions, making it easier to create rich and interactive user interfaces.
+UI Toolkit Extensions is a Unity package that enhances the functionality of Unity's UI Toolkit. It provides extended Visual Elements, utilities for creating smooth transitions, and a powerful sprite sequence animator, making it easier to create rich and interactive user interfaces.
 
 ## Features
 
 - Extended Visual Elements with additional functionality
 - Transition utilities for creating smooth animations
+- Sprite Sequence Animator for creating complex sprite-based animations
 - Easy integration with existing UI Toolkit projects
 
 ## Installation
@@ -77,7 +78,7 @@ public class TransitionExample : MonoBehaviour
         // Setup multiple transitions
         var transitions = new Dictionary<string, object>
         {
-            { "opacity", (500, EasingMode.EaseInOut, 100) }, // duration, Easingode, delay
+            { "opacity", (500, EasingMode.EaseInOut, 100) }, // duration, EasingMode, delay
             { "left" , (750, EasingMode.EaseOutBounce)}, // duration, EasingMode
             { "top", (750, 200)}, // duration, delay (ms)
             { "color", 100 }, //  with duration (ms)
@@ -86,6 +87,43 @@ public class TransitionExample : MonoBehaviour
 
         // Clear transitions
         element.ClearTransitions();
+    }
+}
+```
+
+### SpriteSequenceAnimator
+
+```csharp
+using UnityEngine;
+using UnityEngine.UIElements;
+using RAStudio.UIToolkit.Extensions;
+
+public class SpriteSequenceExample : MonoBehaviour
+{
+    public void Start()
+    {
+        VisualElement element = new VisualElement();
+        Sprite[] sprites = LoadSprites(); // Load your sprites
+
+        var animation = element.AnimateWithSpriteSequence(sprites)
+            .WithFrameDuration(100)
+            .WithLoop(-1)
+            .WithStopCondition(() => Input.GetKeyDown(KeyCode.Space))
+            .OnComplete(() => Debug.Log("Animation complete"))
+            .Start();
+
+        // Create a sequence of animations
+        var sequence = SpriteSequenceAnimator.CreateSpriteSequenceAnimationSequence(element)
+            .Then(animation)
+            .ThenWait(1000)
+            .Then(anotherAnimation)
+            .WithTotalLoops(3)
+            .Start();
+    }
+
+    private Sprite[] LoadSprites()
+    {
+        // Implementation to load sprites
     }
 }
 ```

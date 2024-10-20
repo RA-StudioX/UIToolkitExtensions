@@ -5,6 +5,18 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2024-10-20
+
+### Added
+
+- SpriteSequenceAnimator class with the following features:
+  - Animate VisualElements using sprite sequences
+  - Customizable frame duration, loop count, and delay
+  - Support for custom sprite application methods
+  - Frame-specific actions
+  - Pause, resume, and stop functionality
+  - Animation sequences for multiple VisualElements
+
 ## [1.0.1] - 2024-10-19
 
 ### Fixed
@@ -16,7 +28,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 - TransitionExtensions:
-  - SetupTransitions with multiple propertys change to dictionary of string and object and parsed to get kvp
+  - SetupTransitions with multiple properties changed to dictionary of string and object and parsed to get kvp
 - README updated
 
 ## [1.0.0] - 2024-10-19
