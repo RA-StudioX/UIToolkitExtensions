@@ -102,7 +102,9 @@ public class SpriteSequenceExample : MonoBehaviour
 {
     public void Start()
     {
+        //reminder VisualElments mmust be part of VisualTree of UIDoccuent
         VisualElement element = new VisualElement();
+        VisualElement element2 = new VisualElement();
         Sprite[] sprites = LoadSprites(); // Load your sprites
 
         var animation = element.AnimateWithSpriteSequence(sprites)
@@ -112,11 +114,14 @@ public class SpriteSequenceExample : MonoBehaviour
             .OnComplete(() => Debug.Log("Animation complete"))
             .Start();
 
+        var anotherAnimation = element.AnimateWithSpriteSequence(sprites).WithFrameDuration(100).Withloop(1);
+        var oneMoreAnimation = element2.AnimateWithSpriteSequence(sprites).WithFrameDuration(150).Withloop(2);
+
         // Create a sequence of animations
         var sequence = SpriteSequenceAnimator.CreateSpriteSequenceAnimationSequence(element)
-            .Then(animation)
-            .ThenWait(1000)
             .Then(anotherAnimation)
+            .ThenWait(1000)
+            .Then(oneMoreAnimation)
             .WithTotalLoops(3)
             .Start();
     }
@@ -130,7 +135,7 @@ public class SpriteSequenceExample : MonoBehaviour
 
 ## Documentation
 
-For more detailed information about the package, its components, and how to use them, please refer to the [full documentation](https://github.com/RA-StudioX/UIToolkitExtensions/blob/main/Documentation~/UIToolkitExtensions.md).
+For more detailed information about the package, its components, and how to use them, please refer to the [full documentation](https://github.com/RA-StudioX/UIToolkitExtensions/blob/main/Documentation~/).
 
 ## Requirements
 
