@@ -8,7 +8,7 @@ namespace RAStudio.UIToolkit.Extensions
     /// <summary>
     /// Builder class for configuring and controlling sprite animations.
     /// </summary>
-    public class SpriteAnimationBuilder
+    public class SpriteAnimationBuilder: IDisposable
     {
         public enum AnimationState { Stopped, Running, Paused, Completed }
 
@@ -30,6 +30,8 @@ namespace RAStudio.UIToolkit.Extensions
         private long _lastUpdateTime = 0;
 
         public event Action<AnimationState> StateChanged;
+
+        private bool _disposed = false;
 
         /// <summary>
         /// Initializes a new instance of the SpriteAnimationBuilder class.
@@ -219,18 +221,19 @@ namespace RAStudio.UIToolkit.Extensions
 
         private IVisualElementScheduledItem AnimateInternal()
         {
-            _lastUpdateTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+            float startTime = Time.time;
+            float frameTime = _frameDuration / 1000f; // Convert to seconds
+            float totalDuration = _durationMs.HasValue ? _durationMs.Value / 1000f : float.MaxValue;
 
             return _element.schedule.Execute(() =>
             {
                 if (_currentState != AnimationState.Running) return;
 
-                long currentTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-                long elapsedTime = currentTime - _lastUpdateTime;
+                float elapsedTime = Time.time - startTime;
 
                 if (_durationMs.HasValue)
                 {
-                    _currentFrame = (int)((elapsedTime % _durationMs.Value) / _frameDuration) % _sprites.Length;
+                    _currentFrame = Mathf.FloorToInt((elapsedTime % totalDuration) / frameTime) % _sprites.Length;
                 }
                 else
                 {
@@ -260,12 +263,11 @@ namespace RAStudio.UIToolkit.Extensions
                     _currentFrame++;
                 }
 
-                if ((_durationMs.HasValue && elapsedTime >= _durationMs.Value) ||
-                    (_stopCondition != null && _stopCondition()))
+                if ((elapsedTime >= totalDuration) || (_stopCondition != null && _stopCondition()))
                 {
                     Complete();
                 }
-            }).Every(_frameDuration).StartingIn(_delayMs);
+            }).Every(_frameDuration);
         }
 
         private void Complete()
@@ -273,6 +275,35 @@ namespace RAStudio.UIToolkit.Extensions
             SetState(AnimationState.Completed);
             _internalScheduler?.Pause();
             _onComplete?.Invoke();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // Dispose managed resources
+                    Stop();
+                    _internalScheduler = null;
+                    _frameActions.Clear();
+                    _onComplete = null;
+                    _onCompleteLoop = null;
+                    _stopCondition = null;
+                    _applySpriteAction = null;
+                }
+
+                // Dispose unmanaged resources (if any)
+
+                _disposed = true;
+            }
         }
     }
 }

@@ -1,3 +1,4 @@
+using UnityEngine;
 using UnityEngine.UIElements;
 using System;
 using System.Collections.Generic;
@@ -9,14 +10,16 @@ namespace RAStudio.UIToolkit.Extensions
     /// </summary>
     public class SpriteAnimationSequence
     {
-        private readonly List<SequenceStep> _steps = new List<SequenceStep>();
-        private int _currentStep = 0;
+        private readonly Queue<SequenceStep> _steps = new Queue<SequenceStep>();
         private int _totalLoops = 1;
         private Action _onCompleteOneLoop;
         private Action _onCompleteAllSequences;
         private VisualElement _rootElement;
         private bool _isRunning = false;
         private bool _isPaused = false;
+        private float _sequenceStartTime;
+        private float _pauseStartTime;
+        private float _totalPausedTime;
 
         /// <summary>
         /// Initializes a new instance of the SpriteAnimationSequence class.
@@ -34,7 +37,7 @@ namespace RAStudio.UIToolkit.Extensions
         /// <returns>The sequence instance for method chaining.</returns>
         public SpriteAnimationSequence Then(SpriteAnimationBuilder builder)
         {
-            _steps.Add(new SequenceStep(builder));
+            _steps.Enqueue(new SequenceStep(builder));
             return this;
         }
 
@@ -45,7 +48,7 @@ namespace RAStudio.UIToolkit.Extensions
         /// <returns>The sequence instance for method chaining.</returns>
         public SpriteAnimationSequence ThenWait(long delayMs)
         {
-            _steps.Add(new SequenceStep(delayMs));
+            _steps.Enqueue(new SequenceStep(delayMs));
             return this;
         }
 
@@ -56,7 +59,7 @@ namespace RAStudio.UIToolkit.Extensions
         /// <returns>The sequence instance for method chaining.</returns>
         public SpriteAnimationSequence ThenDo(Action action)
         {
-            _steps.Add(new SequenceStep(action));
+            _steps.Enqueue(new SequenceStep(action));
             return this;
         }
 
@@ -104,8 +107,9 @@ namespace RAStudio.UIToolkit.Extensions
             }
             _isRunning = true;
             _isPaused = false;
-            _currentStep = 0;
-            PlayNextStep(_totalLoops);
+            _sequenceStartTime = Time.time;
+            _totalPausedTime = 0f;
+            _rootElement.schedule.Execute(PlayNextStep);
         }
 
         /// <summary>
@@ -116,9 +120,10 @@ namespace RAStudio.UIToolkit.Extensions
             if (_isRunning && !_isPaused)
             {
                 _isPaused = true;
-                if (_currentStep < _steps.Count && !_steps[_currentStep].IsDelay && !_steps[_currentStep].IsAction)
+                _pauseStartTime = Time.time;
+                if (_steps.Count > 0 && !_steps.Peek().IsDelay && !_steps.Peek().IsAction)
                 {
-                    _steps[_currentStep].Builder.Pause();
+                    _steps.Peek().Builder.Pause();
                 }
             }
         }
@@ -131,14 +136,12 @@ namespace RAStudio.UIToolkit.Extensions
             if (_isRunning && _isPaused)
             {
                 _isPaused = false;
-                if (_currentStep < _steps.Count && !_steps[_currentStep].IsDelay && !_steps[_currentStep].IsAction)
+                _totalPausedTime += Time.time - _pauseStartTime;
+                if (_steps.Count > 0 && !_steps.Peek().IsDelay && !_steps.Peek().IsAction)
                 {
-                    _steps[_currentStep].Builder.Resume();
+                    _steps.Peek().Builder.Resume();
                 }
-                else
-                {
-                    PlayNextStep(_totalLoops);
-                }
+                _rootElement.schedule.Execute(PlayNextStep);
             }
         }
 
@@ -149,7 +152,6 @@ namespace RAStudio.UIToolkit.Extensions
         {
             _isRunning = false;
             _isPaused = false;
-            _currentStep = 0;
             foreach (var step in _steps)
             {
                 if (!step.IsDelay && !step.IsAction)
@@ -157,50 +159,81 @@ namespace RAStudio.UIToolkit.Extensions
                     step.Builder.Stop();
                 }
             }
+            _steps.Clear();
         }
 
-        private void PlayNextStep(int remainingLoops)
+        private void PlayNextStep()
         {
             if (!_isRunning || _isPaused)
             {
                 return;
             }
 
-            if (_currentStep >= _steps.Count)
+            if (_steps.Count == 0)
             {
-                _onCompleteOneLoop?.Invoke();
-                if (remainingLoops > 1 || remainingLoops == -1)
-                {
-                    _currentStep = 0;
-                    PlayNextStep(remainingLoops == -1 ? -1 : remainingLoops - 1);
-                }
-                else
-                {
-                    _onCompleteAllSequences?.Invoke();
-                    _isRunning = false;
-                }
+                CompleteLoop();
                 return;
             }
 
-            var step = _steps[_currentStep];
-            _currentStep++;
+            var step = _steps.Dequeue();
 
             if (step.IsDelay)
             {
-                _rootElement.schedule.Execute(() => PlayNextStep(remainingLoops)).StartingIn(step.DelayMs);
+                float delayEndTime = Time.time + step.DelayMs / 1000f;
+                _rootElement.schedule.Execute(() =>
+                {
+                    if (Time.time >= delayEndTime)
+                    {
+                        PlayNextStep();
+                    }
+                    else
+                    {
+                        _rootElement.schedule.Execute(PlayNextStep);
+                    }
+                }).StartingIn(16); // Check every frame (assuming 60 FPS)
             }
             else if (step.IsAction)
             {
                 step.Action?.Invoke();
-                PlayNextStep(remainingLoops);
+                PlayNextStep();
             }
             else
             {
-                step.Builder.OnComplete(() => PlayNextStep(remainingLoops));
+                step.Builder.OnComplete(PlayNextStep);
                 step.Builder.Start();
             }
         }
 
+        private void CompleteLoop()
+        {
+            _onCompleteOneLoop?.Invoke();
+            if (_totalLoops > 1 || _totalLoops == -1)
+            {
+                if (_totalLoops > 1) _totalLoops--;
+                ResetSteps();
+                PlayNextStep();
+            }
+            else
+            {
+                _onCompleteAllSequences?.Invoke();
+                _isRunning = false;
+            }
+        }
+
+        private void ResetSteps()
+        {
+            // Re-queue all steps
+            var tempSteps = new Queue<SequenceStep>(_steps);
+            _steps.Clear();
+            foreach (var step in tempSteps)
+            {
+                if (!step.IsDelay && !step.IsAction)
+                {
+                    step.Builder.Stop();
+                }
+                _steps.Enqueue(step);
+            }
+        }
 
         /// <summary>
         /// Represents a single step in the animation sequence.
@@ -232,10 +265,6 @@ namespace RAStudio.UIToolkit.Extensions
             /// </summary>
             public Action Action { get; }
 
-            /// <summary>
-            /// Initializes a new instance of the SequenceStep class for an animation.
-            /// </summary>
-            /// <param name="builder">The SpriteAnimationBuilder for this step.</param>
             public SequenceStep(SpriteAnimationBuilder builder)
             {
                 Builder = builder;
@@ -243,10 +272,6 @@ namespace RAStudio.UIToolkit.Extensions
                 IsAction = false;
             }
 
-            /// <summary>
-            /// Initializes a new instance of the SequenceStep class for a delay.
-            /// </summary>
-            /// <param name="delayMs">The delay in milliseconds.</param>
             public SequenceStep(long delayMs)
             {
                 DelayMs = delayMs;
@@ -254,10 +279,6 @@ namespace RAStudio.UIToolkit.Extensions
                 IsAction = false;
             }
 
-            /// <summary>
-            /// Initializes a new instance of the SequenceStep class for an action.
-            /// </summary>
-            /// <param name="action">The action to be performed.</param>
             public SequenceStep(Action action)
             {
                 Action = action;

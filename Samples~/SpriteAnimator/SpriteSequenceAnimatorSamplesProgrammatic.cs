@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UIElements;
 using RAStudio.UIToolkit.Extensions;
+using System.Collections.Generic;
 
 namespace RAStudio.UIToolkit.Samples
 {
@@ -11,6 +12,8 @@ namespace RAStudio.UIToolkit.Samples
         private Sprite[] spriteSequence;
         private SpriteAnimationBuilder controlledAnimationBuilder;
         private SpriteAnimationSequence sequenceAnimation;
+        private Dictionary<string, SpriteAnimationBuilder> activeAnimations = new Dictionary<string, SpriteAnimationBuilder>();
+
 
         private void Awake()
         {
@@ -181,11 +184,23 @@ namespace RAStudio.UIToolkit.Samples
 
         private void StartSimpleAnimation(VisualElement element)
         {
-            element.AnimateWithSprites(spriteSequence)
+            // Stop the existing animation if it's running
+            if (activeAnimations.TryGetValue("SimpleAnimation", out var existingAnimation))
+            {
+                existingAnimation.Stop();
+            }
+
+            // Create and start a new animation
+            var newAnimation = element.AnimateWithSprites(spriteSequence)
                 .WithFrameDuration(500)
                 .WithLoop(-1)
-                .OnCompleteLoop(() => Debug.Log("Loop completed!"))
-                .Start();
+                .OnCompleteLoop(() => Debug.Log("Loop completed!"));
+
+            // Store the new animation
+            activeAnimations["SimpleAnimation"] = newAnimation;
+
+            // Start the animation
+            newAnimation.Start();
         }
 
         private void StartDelayedAnimation(VisualElement element)
