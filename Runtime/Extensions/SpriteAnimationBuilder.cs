@@ -161,6 +161,7 @@ namespace RAStudio.UIToolkit.Extensions
             switch (_currentState)
             {
                 case AnimationState.Stopped:
+                case AnimationState.Completed:
                     _internalScheduler = AnimateInternal();
                     SetState(AnimationState.Running);
                     break;
