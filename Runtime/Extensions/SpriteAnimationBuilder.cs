@@ -268,7 +268,7 @@ namespace RAStudio.UIToolkit.Extensions
                 {
                     Complete();
                 }
-            }).Every(_frameDuration);
+            }).Every(_frameDuration).StartingIn(_delayMs);
         }
 
         private void Complete()

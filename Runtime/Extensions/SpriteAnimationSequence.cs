@@ -10,8 +10,10 @@ namespace RAStudio.UIToolkit.Extensions
     /// </summary>
     public class SpriteAnimationSequence
     {
-        private readonly Queue<SequenceStep> _steps = new Queue<SequenceStep>();
+        private Queue<SequenceStep> _originalSteps = new Queue<SequenceStep>();
+        private Queue<SequenceStep> _steps = new Queue<SequenceStep>();
         private int _totalLoops = 1;
+        private int _currentLoop = 0;
         private Action _onCompleteOneLoop;
         private Action _onCompleteAllSequences;
         private VisualElement _rootElement;
@@ -37,7 +39,8 @@ namespace RAStudio.UIToolkit.Extensions
         /// <returns>The sequence instance for method chaining.</returns>
         public SpriteAnimationSequence Then(SpriteAnimationBuilder builder)
         {
-            _steps.Enqueue(new SequenceStep(builder));
+            SequenceStep step = new SequenceStep(builder);
+            _originalSteps.Enqueue(step);
             return this;
         }
 
@@ -48,7 +51,8 @@ namespace RAStudio.UIToolkit.Extensions
         /// <returns>The sequence instance for method chaining.</returns>
         public SpriteAnimationSequence ThenWait(long delayMs)
         {
-            _steps.Enqueue(new SequenceStep(delayMs));
+            SequenceStep step = new SequenceStep(delayMs);
+            _originalSteps.Enqueue(step);
             return this;
         }
 
@@ -59,7 +63,8 @@ namespace RAStudio.UIToolkit.Extensions
         /// <returns>The sequence instance for method chaining.</returns>
         public SpriteAnimationSequence ThenDo(Action action)
         {
-            _steps.Enqueue(new SequenceStep(action));
+            SequenceStep step = new SequenceStep(action);
+            _originalSteps.Enqueue(step);
             return this;
         }
 
@@ -101,15 +106,27 @@ namespace RAStudio.UIToolkit.Extensions
         /// </summary>
         public void Start()
         {
-            if (_isRunning)
+            if (_isRunning && !_isPaused)
             {
                 return;
             }
+
+            if (!_isRunning || (_steps.Count == 0 && _currentLoop >= _totalLoops))
+            {
+                ResetSequence();
+            }
+
             _isRunning = true;
             _isPaused = false;
             _sequenceStartTime = Time.time;
             _totalPausedTime = 0f;
             _rootElement.schedule.Execute(PlayNextStep);
+        }
+
+        private void ResetSequence()
+        {
+            _steps = new Queue<SequenceStep>(_originalSteps);
+            _currentLoop = 0;
         }
 
         /// <summary>
@@ -159,7 +176,7 @@ namespace RAStudio.UIToolkit.Extensions
                     step.Builder.Stop();
                 }
             }
-            _steps.Clear();
+            ResetSequence();
         }
 
         private void PlayNextStep()
@@ -207,31 +224,16 @@ namespace RAStudio.UIToolkit.Extensions
         private void CompleteLoop()
         {
             _onCompleteOneLoop?.Invoke();
-            if (_totalLoops > 1 || _totalLoops == -1)
+            _currentLoop++;
+            if (_currentLoop < _totalLoops || _totalLoops == -1)
             {
-                if (_totalLoops > 1) _totalLoops--;
-                ResetSteps();
+                ResetSequence();
                 PlayNextStep();
             }
             else
             {
                 _onCompleteAllSequences?.Invoke();
                 _isRunning = false;
-            }
-        }
-
-        private void ResetSteps()
-        {
-            // Re-queue all steps
-            var tempSteps = new Queue<SequenceStep>(_steps);
-            _steps.Clear();
-            foreach (var step in tempSteps)
-            {
-                if (!step.IsDelay && !step.IsAction)
-                {
-                    step.Builder.Stop();
-                }
-                _steps.Enqueue(step);
             }
         }
 

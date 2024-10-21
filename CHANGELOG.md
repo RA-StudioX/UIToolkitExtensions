@@ -5,6 +5,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2024-10-21
+
+### Fixed
+
+- Fixed SpriteAnimationBuilder to use Unity's `StartingIn` method for more precise initial delay handling.
+- Fixed SpriteAnimationSequence not reseting queue like needed added original queue variable
+
 ## [1.2.2] - 2024-10-21
 
 ### Fixed
