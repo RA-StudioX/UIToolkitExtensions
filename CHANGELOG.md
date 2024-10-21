@@ -5,6 +5,26 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2024-10-21
+
+### Changed
+
+- Renamed SpriteSequenceAnimator to SpriteAnimator for clarity
+- Renamed SpriteSequenceAnimationBuilder to SpriteAnimationBuilder
+- Renamed SpriteSequenceAnimationSequence to SpriteAnimationSequence
+
+### Added
+
+- Enhanced control methods (Start, Stop, Pause, Resume) for both SpriteAnimationBuilder and SpriteAnimationSequence
+- Added AnimationState enum to SpriteAnimationBuilder for better state management
+- Implemented StateChanged event in SpriteAnimationBuilder for external state tracking
+
+### Improved
+
+- Optimized animation logic in SpriteAnimationBuilder
+- Enhanced error handling and logging in SpriteAnimationBuilder
+- Improved performance and reliability of SpriteAnimationSequence
+
 ## [1.1.0] - 2024-10-20
 
 ### Added

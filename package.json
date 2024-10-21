@@ -1,32 +1,31 @@
 {
-    "name": "net.ra-studio.uitoolkit.extensions",
-    "version": "1.1.0",
-    "displayName": "UI Toolkit Extensions",
-    "description": "Extensions for Unity UI Toolkit, including enhanced Visual Elements, transition utilities, and sprite sequence animation.",
-    "unity": "2021.3",
-    "documentationUrl": "https://github.com/RA-StudioX/UIToolkitExtensions/blob/main/Documentation~/",
-    "changelogUrl": "https://github.com/RA-StudioX/UIToolkitExtensions/blob/main/CHANGELOG.md",
-    "licensesUrl": "https://github.com/RA-StudioX/UIToolkitExtensions/blob/main/LICENSE.md",
-    "dependencies": {},
-    "keywords": [
-      "ui",
-      "toolkit",
-      "extensions",
-      "transitions",
-      "animation",
-      "sprite",
-      "sequence"
-    ],
-    "author": {
-      "name": "RA Studio",
-      "email": "contact@ra-studio.net",
-      "url": "https://ra-studio.net"
-    },
-    "samples": [
-      {
-        "displayName": "Sprite Sequence Animator Examples",
-        "description": "Contains sample scenes demonstrating various uses of the Sprite Sequence Animator",
-        "path": "Samples~/SpriteSequenceAnimator"
-      }
-    ]
+  "name": "net.ra-studio.uitoolkit.extensions",
+  "version": "1.2.0",
+  "displayName": "UI Toolkit Extensions",
+  "description": "Extensions for Unity UI Toolkit, including enhanced Visual Elements, transition utilities, and sprite animation.",
+  "unity": "2021.3",
+  "documentationUrl": "https://github.com/RA-StudioX/UIToolkitExtensions/blob/main/Documentation~/",
+  "changelogUrl": "https://github.com/RA-StudioX/UIToolkitExtensions/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/RA-StudioX/UIToolkitExtensions/blob/main/LICENSE.md",
+  "dependencies": {},
+  "keywords": [
+    "ui",
+    "toolkit",
+    "extensions",
+    "transitions",
+    "animation",
+    "sprite"
+  ],
+  "author": {
+    "name": "RA Studio",
+    "email": "contact@ra-studio.net",
+    "url": "https://ra-studio.net"
+  },
+  "samples": [
+    {
+      "displayName": "Sprite Animator Examples",
+      "description": "Contains sample scenes demonstrating various uses of the Sprite Animator",
+      "path": "Samples~/SpriteAnimator"
+    }
+  ]
 }

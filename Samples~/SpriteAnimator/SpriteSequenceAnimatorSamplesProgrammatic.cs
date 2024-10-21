@@ -9,8 +9,8 @@ namespace RAStudio.UIToolkit.Samples
     {
         private UIDocument uiDocument;
         private Sprite[] spriteSequence;
-        private SpriteSequenceAnimator.SpriteSequenceAnimationBuilder controlledAnimationBuilder;
-
+        private SpriteAnimationBuilder controlledAnimationBuilder;
+        private SpriteAnimationSequence sequenceAnimation;
 
         private void Awake()
         {
@@ -44,7 +44,7 @@ namespace RAStudio.UIToolkit.Samples
             // Create and add child elements with buttons
             root.Add(CreateAnimationExample("SimpleAnimation", "Simple Animation", StartSimpleAnimation));
             root.Add(CreateAnimationExample("DelayedAnimation", "Delayed Animation", StartDelayedAnimation));
-            root.Add(CreateAnimationExample("SequenceAnimation", "Sequence Animation", StartSequenceAnimation));
+            root.Add(CreateSequenceAnimationExample("SequenceAnimation", "Sequence Animation"));
             root.Add(CreateAnimationExample("CustomAnimation", "Custom Animation", StartCustomAnimation));
             root.Add(CreateAnimationExample("FrameActionAnimation", "Frame Action Animation", StartFrameActionAnimation));
             root.Add(CreateAnimationExample("ErrorHandlingAnimation", "Error Handling Animation", StartErrorHandlingAnimation));
@@ -82,6 +82,53 @@ namespace RAStudio.UIToolkit.Samples
             return container;
         }
 
+        private VisualElement CreateSequenceAnimationExample(string name, string labelText)
+        {
+            VisualElement container = new VisualElement();
+            container.style.flexDirection = FlexDirection.Row;
+            container.style.alignItems = Align.Center;
+            container.style.marginBottom = 20;
+
+            Label label = new Label(labelText);
+            label.style.width = 150;
+
+            VisualElement animatedElement = new VisualElement();
+            animatedElement.name = name;
+            animatedElement.style.width = 100;
+            animatedElement.style.height = 100;
+            animatedElement.style.backgroundColor = Color.gray;
+
+            sequenceAnimation = CreateSequenceAnimation(animatedElement);
+
+            Button startButton = new Button { text = "Start" };
+            startButton.style.width = 80;
+            startButton.style.marginLeft = 10;
+            startButton.clicked += () => sequenceAnimation.Start();
+
+            Button stopButton = new Button { text = "Stop" };
+            stopButton.style.width = 80;
+            stopButton.style.marginLeft = 10;
+            stopButton.clicked += () => sequenceAnimation.Stop();
+
+            Button pauseButton = new Button { text = "Pause" };
+            pauseButton.style.width = 80;
+            pauseButton.style.marginLeft = 10;
+            pauseButton.clicked += () => sequenceAnimation.Pause();
+
+            Button resumeButton = new Button { text = "Resume" };
+            resumeButton.style.width = 80;
+            resumeButton.style.marginLeft = 10;
+            resumeButton.clicked += () => sequenceAnimation.Resume();
+
+            container.Add(label);
+            container.Add(animatedElement);
+            container.Add(startButton);
+            container.Add(stopButton);
+            container.Add(pauseButton);
+            container.Add(resumeButton);
+
+            return container;
+        }
 
         private VisualElement CreateControlledAnimationExample(string name, string labelText)
         {
@@ -134,7 +181,7 @@ namespace RAStudio.UIToolkit.Samples
 
         private void StartSimpleAnimation(VisualElement element)
         {
-            element.AnimateWithSpriteSequence(spriteSequence)
+            element.AnimateWithSprites(spriteSequence)
                 .WithFrameDuration(500)
                 .WithLoop(-1)
                 .OnCompleteLoop(() => Debug.Log("Loop completed!"))
@@ -143,7 +190,7 @@ namespace RAStudio.UIToolkit.Samples
 
         private void StartDelayedAnimation(VisualElement element)
         {
-            element.AnimateWithSpriteSequence(spriteSequence)
+            element.AnimateWithSprites(spriteSequence)
                 .WithFrameDuration(500)
                 .WithDelay(1000)
                 .WithLoop(2)
@@ -152,24 +199,23 @@ namespace RAStudio.UIToolkit.Samples
                 .Start();
         }
 
-        private void StartSequenceAnimation(VisualElement element)
+        private SpriteAnimationSequence CreateSequenceAnimation(VisualElement element)
         {
-            SpriteSequenceAnimator.CreateSpriteSequenceAnimationSequence(element)
-                .Then(element.AnimateWithSpriteSequence(spriteSequence).WithFrameDuration(500).WithLoop(1))
+            return SpriteAnimator.CreateAnimationSequence(element)
+                .Then(element.AnimateWithSprites(spriteSequence).WithFrameDuration(500).WithLoop(1))
                 .ThenWait(500)
-                .Then(element.AnimateWithSpriteSequence(spriteSequence).WithFrameDuration(500).WithLoop(1))
+                .Then(element.AnimateWithSprites(spriteSequence).WithFrameDuration(500).WithLoop(1))
                 .ThenDo(() => Debug.Log("Waiting between animations"))
                 .ThenWait(1000)
-                .Then(element.AnimateWithSpriteSequence(spriteSequence).WithFrameDuration(500).WithLoop(1))
+                .Then(element.AnimateWithSprites(spriteSequence).WithFrameDuration(500).WithLoop(1))
                 .WithTotalLoops(3)
                 .OnCompleteOneLoop(() => Debug.Log("One sequence loop completed!"))
-                .OnCompleteAllSequences(() => Debug.Log("All sequences completed!"))
-                .Start();
+                .OnCompleteAllSequences(() => Debug.Log("All sequences completed!"));
         }
 
         private void StartCustomAnimation(VisualElement element)
         {
-            element.AnimateWithSpriteSequence(spriteSequence)
+            element.AnimateWithSprites(spriteSequence)
                 .WithFrameDuration(500)
                 .WithCustomSpriteApplication(sprite =>
                 {
@@ -182,7 +228,7 @@ namespace RAStudio.UIToolkit.Samples
 
         private void StartFrameActionAnimation(VisualElement element)
         {
-            element.AnimateWithSpriteSequence(spriteSequence)
+            element.AnimateWithSprites(spriteSequence)
                 .WithFrameDuration(500)
                 .WithLoop(2)
                 .WithFrameAction(0, () => Debug.Log("Action on frame 0 (Circle)"))
@@ -194,7 +240,7 @@ namespace RAStudio.UIToolkit.Samples
 
         private void StartErrorHandlingAnimation(VisualElement element)
         {
-            element.AnimateWithSpriteSequence(spriteSequence)
+            element.AnimateWithSprites(spriteSequence)
                 .WithFrameDuration(500)
                 .WithLoop(1)
                 .WithFrameAction(0, () => Debug.Log("Valid frame action"))
@@ -203,9 +249,9 @@ namespace RAStudio.UIToolkit.Samples
                 .Start();
         }
 
-        private SpriteSequenceAnimator.SpriteSequenceAnimationBuilder CreateControlledAnimationBuilder(VisualElement element)
+        private SpriteAnimationBuilder CreateControlledAnimationBuilder(VisualElement element)
         {
-            return element.AnimateWithSpriteSequence(spriteSequence)
+            return element.AnimateWithSprites(spriteSequence)
                 .WithFrameDuration(500)
                 .WithFrameAction(0, () => Debug.Log("Action on frame 0 (Circle)"))
                 .WithLoop(-1)

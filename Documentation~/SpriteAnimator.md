@@ -1,12 +1,12 @@
-# SpriteSequenceAnimator Documentation
+# SpriteAnimator Documentation
 
 ## Table of Contents
 
 1. [Introduction](#introduction)
 2. [Usage](#usage)
-3. [SpriteSequenceAnimationBuilder](#spritesequenceanimationbuilder)
+3. [SpriteAnimationBuilder](#spriteanimationbuilder)
    - [Methods](#methods)
-4. [SpriteSequenceAnimationSequence](#spritesequenceanimationsequence)
+4. [SpriteAnimationSequence](#spriteanimationsequence)
    - [Methods](#methods-1)
 5. [Examples](#examples)
 6. [Best Practices](#best-practices)
@@ -14,31 +14,31 @@
 
 ## Introduction
 
-The SpriteSequenceAnimator is a powerful tool for creating sprite-based animations in Unity's UI Toolkit. It allows you to animate VisualElements using sequences of sprites, with fine-grained control over timing, looping, and custom actions.
+The SpriteAnimator is a powerful tool for creating sprite-based animations in Unity's UI Toolkit. It allows you to animate VisualElements using sequences of sprites, with fine-grained control over timing, looping, and custom actions.
 
 ## Usage
 
-To use the SpriteSequenceAnimator, you need to include the following namespace:
+To use the SpriteAnimator, you need to include the following namespace:
 
 ```csharp
 using RAStudio.UIToolkit.Extensions;
 ```
 
-Basic usage involves creating an animation using the `AnimateWithSpriteSequence` extension method on a VisualElement:
+Basic usage involves creating an animation using the `AnimateWithSprites` extension method on a VisualElement:
 
 ```csharp
 VisualElement element = new VisualElement();
 Sprite[] sprites = LoadSprites(); // Load your sprites
 
-var animation = element.AnimateWithSpriteSequence(sprites)
+var animation = element.AnimateWithSprites(sprites)
     .WithFrameDuration(100)
     .WithLoop(-1)
     .Start();
 ```
 
-## SpriteSequenceAnimationBuilder
+## SpriteAnimationBuilder
 
-The SpriteSequenceAnimationBuilder class allows you to configure various aspects of the animation before starting it.
+The SpriteAnimationBuilder class allows you to configure various aspects of the animation before starting it.
 
 ### Methods
 
@@ -51,24 +51,27 @@ The SpriteSequenceAnimationBuilder class allows you to configure various aspects
 - `OnCompleteLoop(Action onCompleteLoop)`: Sets an action to be performed when each loop of the animation completes.
 - `WithCustomSpriteApplication(Action<Sprite> applyAction)`: Sets a custom action for applying sprites to the VisualElement.
 - `WithFrameAction(int frameIndex, Action action)`: Adds an action to be performed on a specific frame of the animation.
-- `Start()`: Starts the animation.
+- `Start()`: Starts the animation and returns the SpriteAnimationBuilder instance.
 - `Stop()`: Stops the animation.
 - `Pause()`: Pauses the animation.
 - `Resume()`: Resumes the paused animation.
 
-## SpriteSequenceAnimationSequence
+## SpriteAnimationSequence
 
-The SpriteSequenceAnimationSequence class allows you to create sequences of sprite animations for multiple VisualElements.
+The SpriteAnimationSequence class allows you to create sequences of sprite animations for multiple VisualElements.
 
 ### Methods
 
-- `Then(SpriteSequenceAnimationBuilder builder)`: Adds a sprite sequence animation to the sequence.
+- `Then(SpriteAnimationBuilder builder)`: Adds a sprite animation to the sequence.
 - `ThenWait(long delayMs)`: Adds a delay to the sequence.
 - `ThenDo(Action action)`: Adds an action to be performed in the sequence.
 - `WithTotalLoops(int loops)`: Sets the number of times the entire sequence should loop.
 - `OnCompleteOneLoop(Action action)`: Sets an action to be performed when one loop of the sequence completes.
 - `OnCompleteAllSequences(Action action)`: Sets an action to be performed when all loops of the sequence complete.
 - `Start()`: Starts the sequence of animations.
+- `Pause()`: Pauses the sequence of animations.
+- `Resume()`: Resumes the paused sequence of animations.
+- `Stop()`: Stops the sequence of animations.
 
 ## Examples
 
@@ -78,7 +81,7 @@ The SpriteSequenceAnimationSequence class allows you to create sequences of spri
 VisualElement element = new VisualElement();
 Sprite[] sprites = LoadSprites();
 
-element.AnimateWithSpriteSequence(sprites)
+element.AnimateWithSprites(sprites)
     .WithFrameDuration(100)
     .WithLoop(3)
     .OnComplete(() => Debug.Log("Animation complete"))
@@ -88,7 +91,7 @@ element.AnimateWithSpriteSequence(sprites)
 ### Animation with Custom Sprite Application
 
 ```csharp
-element.AnimateWithSpriteSequence(sprites)
+element.AnimateWithSprites(sprites)
     .WithFrameDuration(100)
     .WithCustomSpriteApplication(sprite => element.style.backgroundImage = new StyleBackground(sprite))
     .Start();
@@ -97,10 +100,11 @@ element.AnimateWithSpriteSequence(sprites)
 ### Animation Sequence
 
 ```csharp
-var sequence = SpriteSequenceAnimator.CreateSpriteSequenceAnimationSequence(rootElement)
-    .Then(element1.AnimateWithSpriteSequence(sprites1).WithFrameDuration(100))
+var rootElement = new VisualElement();
+var sequence = SpriteAnimator.CreateAnimationSequence(rootElement)
+    .Then(element1.AnimateWithSprites(sprites1).WithFrameDuration(100))
     .ThenWait(500)
-    .Then(element2.AnimateWithSpriteSequence(sprites2).WithFrameDuration(150))
+    .Then(element2.AnimateWithSprites(sprites2).WithFrameDuration(150))
     .WithTotalLoops(2)
     .OnCompleteAllSequences(() => Debug.Log("All animations complete"))
     .Start();
